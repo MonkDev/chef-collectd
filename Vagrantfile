@@ -35,13 +35,23 @@ Vagrant.configure("2") do |config|
         :plugins => {
           :disk => {},
           :load => {},
-          :apache => {}
+          :apache => {},
+          :redis => {
+            'template' => 'plugin_redis.conf.erb',
+            'config' => {
+              'Host' => 'localhost',
+              'Port' => '6379',
+              'Timeout' => 2000,
+              'Password' => 'Whatever'
+            }
+          }
         }
       }
     }
 
     chef.run_list = [
-        "recipe[collectd::default]"
+        "recipe[collectd::default]",
+        "recipe[collectd::attribute_driven]"
     ]
   end
 end
