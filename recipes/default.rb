@@ -56,11 +56,30 @@ if node["collectd"]["plugins"]
     plugin_support_packages << "libxml2-dev" if plugins.include?("ascent") ||
       plugins.include?("virt")
     plugin_support_packages << "libyajl-dev" if plugins.include?("curl_json")
+    install_redis = true if plugins.include?("redis")
   end
 
   plugin_support_packages.each do |pkg|
     package pkg
   end
+
+  if install_redis
+    cookbook_file "credis-0.2.3-modified.tar.gz" do
+      path "#{Chef::Config[:file_cache_path]}/credis-0.2.3-modified.tar.gz"
+    end
+
+    bash "install-credis" do
+      cwd Chef::Config[:file_cache_path]
+      code <<-EOH
+        tar -xzf credis-0.2.3-modified.tar.gz
+        (cd credis-0.2.3 && make)
+        cp -f credis-0.2.3/libcredis.so /usr/lib/
+        cp -f credis-0.2.3/* /usr/include/
+      EOH
+      creates "/usr/lib/libcredis.so"
+    end
+  end
+
 end
 
 remote_file "#{Chef::Config[:file_cache_path]}/collectd-#{node["collectd"]["version"]}.tar.gz" do
